@@ -9,14 +9,38 @@
     <h1>Jogo da Memória</h1>
     <div class="game-board">
     {% for card in cards %}
-    <div class="card" onclick="flipCard(this)" data-id="{{ card.id }}" data-type="{{ card.type }}">
-        <div class="front">?</div>
+
+    <div class="card" onclick="flipCard(this)" data-id="{{ card.id }}" data-type="{{ card.type }}"> 
+        <div class="front" aria-hidden="true"></div>
+        <div class="back" aria-hidden="false">{{ card }}</div>
+        <div class="front"></div>
         <div class="back">{{ card.text }}</div>
     </div>
+
+    
+    
     {% endfor %}
 </div> 
 
+    <audio id="som-acerto" src="{{ url_for('static', filename='sounds/acerto.mp3') }}"></audio>
+    <audio id="som-erro" src="{{ url_for('static', filename='sounds/erro.mp3') }}"></audio>
+
+    <button id="btn-acerto" style="display:none" onclick="document.getElementById('som-acerto').play()"></button>
+    <button id="btn-erro" style="display:none" onclick="document.getElementById('som-erro').play()"></button>
+
     <script>
+        const somAcerto = document.getElementById("som-acerto");
+        const somErro = document.getElementById("som-erro");
+
+        function tocarAcerto() {
+            document.getElementById('btn-acerto').click();
+}
+
+        function tocarErro() {
+            document.getElementById('btn-erro').click();
+}
+
+
         let flippedCards = [];
         let lockBoard = false;
 
@@ -48,10 +72,12 @@
                 );
 
                 if (isMatch) {
+                    tocarAcerto();
                     updateScore(10);
                     flippedCards = [];
                     lockBoard = false;
                 } else {
+                    tocarErro();
                     updateScore(-2);
                     setTimeout(() => {
                         first.classList.remove('flipped');
@@ -69,6 +95,8 @@
                 document.getElementById("score").innerText = "Pontuação: " + data.score;
             });
     </script>
+
+    
 
 </body>
 </html>
