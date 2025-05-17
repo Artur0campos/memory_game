@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Jogo da Memória</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Jogo da Memória</h1>
+    <div class="game-board">
+    {% for card in cards %}
+    <div class="card" onclick="flipCard(this)" data-id="{{ card.id }}" data-type="{{ card.type }}">
+        <div class="front">?</div>
+        <div class="back">{{ card.text }}</div>
+    </div>
+    {% endfor %}
+</div> 
+
+    <script>
+        let flippedCards = [];
+        let lockBoard = false;
+
+        async function updateScore(points) {
+            const res = await fetch("/score", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ points: points })
+            });
+            const data = await res.json();
+            document.getElementById("score").innerText = "Pontuação: " + data.score;
+        }
+
+        function flipCard(cardElement) {
+            if (lockBoard || cardElement.classList.contains('flipped')) return;
+
+            cardElement.classList.add('flipped');
+            flippedCards.push(cardElement);
+
+            if (flippedCards.length === 2) {
+                lockBoard = true;
+
+                const [first, second] = flippedCards;
+
+                // Verifica se têm mesmo ID mas tipos diferentes (key + definition)
+                const isMatch = (
+                    first.dataset.id === second.dataset.id &&
+                    first.dataset.type !== second.dataset.type
+                );
+
+                if (isMatch) {
+                    updateScore(10);
+                    flippedCards = [];
+                    lockBoard = false;
+                } else {
+                    updateScore(-2);
+                    setTimeout(() => {
+                        first.classList.remove('flipped');
+                        second.classList.remove('flipped');
+                        flippedCards = [];
+                        lockBoard = false;
+                    }, 1000);
+                }
+            }
+        }
+
+        fetch("/get_score")
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("score").innerText = "Pontuação: " + data.score;
+            });
+    </script>
+
+</body>
+</html>
